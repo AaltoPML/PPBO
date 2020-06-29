@@ -65,9 +65,9 @@ In the notebook, click ![Screenshot_2020-05-22 Camphor-Copper - Jupyter Notebook
 Run the numerical described in the "Numerical experiment" section of the paper. Please note that the numerical experiments may take a long time even in a computer with tens of CPUs.<br />
 
 Open ppbo_numerical_main.py<br />
-Set a correct working directory: wd = ...<br />
-Uncomment the objective function you would like to run: E.g. "env.run(six_hump_camel)"<br />
-Run the script<br />
+Set a correct working directory (wd = ...)<br />
+Uncomment the objective function you would like to run (e.g. env.run(six_hump_camel))<br />
+Run the script!<br />
 
 ## Contact
 
