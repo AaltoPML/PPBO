@@ -17,7 +17,7 @@ Bayesian optimization is an effective method for finding extrema of a black-box 
 
 
 ### Requirements
---- Core library ---
+--- (Core library) ---
  * Python 3.7
  * numpy
  * pandas
@@ -25,8 +25,8 @@ Bayesian optimization is an effective method for finding extrema of a black-box 
  * sklearn
  * arspy
  * GPyOpt
- * matplotlib
---- User experiments ---
+ * matplotlib <br />
+--- (User experiment) ---
  * ase
  * notebook
 
@@ -65,10 +65,10 @@ In the notebook, click ![Screenshot_2020-05-22 Camphor-Copper - Jupyter Notebook
 ### Instructions to run numerical experiments
 Run the numerical described in the "Numerical experiment" section of the paper. Please note that the numerical experiments may take a long time even in a computer with tens of CPUs.<br />
 
-# open ppbo_numerical_main.py<br />
-# set a correct working directory: wd = ...<br />
-# uncomment the objective function you would like to run: E.g. "env.run(six_hump_camel)"<br />
-# run the script<br />
+ * open ppbo_numerical_main.py<br />
+ * set a correct working directory: wd = ...<br />
+ * uncomment the objective function you would like to run: E.g. "env.run(six_hump_camel)"<br />
+ * run the script<br />
 
 ## Contact
 
