@@ -63,12 +63,12 @@ Find the Jupyter-notebook *Camphor-Copper.ipynb*, and click it.<br />
 In the notebook, click ![Screenshot_2020-05-22 Camphor-Copper - Jupyter Notebook](https://user-images.githubusercontent.com/57790862/82723533-47d17600-9cd8-11ea-9978-46f4551af440.png)!
 
 ### Instructions to run numerical experiments
-Run the numerical described in the "Numerical experiment" section of the paper. Please note that the numerical experiments may take a long time even in a computer with tens of CPUs.
+Run the numerical described in the "Numerical experiment" section of the paper. Please note that the numerical experiments may take a long time even in a computer with tens of CPUs.<br />
 
-# open ppbo_numerical_main.py
-# set a correct working directory: wd = ...
-# uncomment the objective function you would like to run: E.g. "env.run(six_hump_camel)"
-# run the script
+# open ppbo_numerical_main.py<br />
+# set a correct working directory: wd = ...<br />
+# uncomment the objective function you would like to run: E.g. "env.run(six_hump_camel)"<br />
+# run the script<br />
 
 ## Contact
 
@@ -81,7 +81,7 @@ Work done in the [Probabilistic Machine Learning research group](https://researc
 
 ## Reference
 
- * Tomi Peltola, Mustafa Mert Çelikok, Pedram Daee, Samuel Kaski. **Machine Teaching of Active Sequential Learners**, NeurIPS 2019. https://papers.nips.cc/paper/9299-machine-teaching-of-active-sequential-learners
+ * Mikkola, P., Todorović, M., Järvi, J., Rinke, P., and Kaski, S. (2020). Projective Preferential Bayesian Optimization.
 
 
 ## License
