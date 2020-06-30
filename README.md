@@ -28,6 +28,7 @@ Bayesian optimization is an effective method for finding extrema of a black-box 
 --- (User experiment) ---
  * ase
  * notebook
+ * psutil
 
 ### Instructions to experiment with Camphor/Cu(111)
 The interface for eliciting the user preferneces over Camphor/Cu(111) test case described in the "User experiment" section of the paper. 
