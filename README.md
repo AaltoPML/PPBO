@@ -3,7 +3,7 @@ Projective Preferential Bayesian Optimization
 
 The repository contains a Python implementing of the method described in
 
-Petrus Mikkola, Milica Todorović, Jari Järvi, Patrick Rinke, Samuel Kaski  
+Petrus Mikkola, Milica Todorović, Jari Järvi, Patrick Rinke, Samuel Kaski. (2020)  
 **Projective Preferential Bayesian Optimization**,  *In Proceedings of the 37th International Conference on Machine Learning*.  
 [ICML'20 proceedings](https://proceedings.icml.cc/static/paper_files/icml/2020/2377-Paper.pdf), [BibTeX](bibtex.bib), [arXiv preprint](https://arxiv.org/abs/2002.03113)
 
