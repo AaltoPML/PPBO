@@ -4,8 +4,8 @@ Projective Preferential Bayesian Optimization
 The repository contains a Python implementing of the method described in
 
 Petrus Mikkola, Milica Todorović, Jari Järvi, Patrick Rinke, Samuel Kaski  
-**Projective Preferential Bayesian Optimization**,  ICML 2020  
-(also available on arXiv: https://arxiv.org/abs/2002.03113)
+**Projective Preferential Bayesian Optimization**,  *In Proceedings of the 37th International Conference on Machine Learning*.  
+[ICML'20 proceedings](https://proceedings.icml.cc/static/paper_files/icml/2020/2377-Paper.pdf), [BibTeX](bibtex.bib), [arXiv preprint](https://arxiv.org/abs/2002.03113)
 
 **Abstract**:  
 Bayesian optimization is an effective method for finding extrema of a black-box function. We propose a new type of Bayesian optimization for learning user preferences in high-dimensional spaces. The central assumption is that the underlying objective function cannot be evaluated directly, but instead a minimizer along a projection can be queried, which we call a projective preferential query. The form of the query allows for feedback that is natural for a human to give, and which enables interaction. This is demonstrated in a user experiment in which the user feedback comes in the form of optimal position and orientation of a molecule adsorbing to a surface. We demonstrate that our framework is able to find a global minimum of a high-dimensional black-box function, which is an infeasible task for existing preferential Bayesian optimization frameworks that are based on pairwise comparisons.
