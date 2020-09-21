@@ -91,10 +91,10 @@ class GPModel:
             self.set_theta() 
         self.update_Sigma(self.theta)
         self.update_Sigma_inv(self.theta)
-        self.update_f_MAP()
+        self.update_f_MAP(random_initialvalue=True)
         if optimize_theta:
             self.optimize_theta()
-            self.update_f_MAP(random_initialvalue=False) #is random_initialvalue necessary?
+            self.update_f_MAP(random_initialvalue=True) 
             self.update_Sigma(self.theta)
             self.update_Sigma_inv(self.theta)
         if self.verbose: print("Current theta is: " + str(self.theta) + ' (Acq. = ' +str(self.xi_acquisition_function)+')')
@@ -127,8 +127,14 @@ class GPModel:
         sigma_f = theta[2]
         if l <=0 or sigma_f <= 0:
             print("Check hyperparameter values!")
-        sqdist = np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
-        return sigma_f**2 * np.exp(-(1/2*l)*sqdist)
+        """
+        Compute the Euclidean distance between each row of X1 and X2
+        """ 
+        X1sq = np.sum(np.square(X1),1)
+        X2sq = np.sum(np.square(X2),1)
+        sqdist = -2.*np.dot(X1, X2.T) + (X1sq[:,None] + X2sq[None,:])
+        sqdist = np.clip(sqdist, 0, np.inf)
+        return sigma_f**2 * np.exp(-0.5*sqdist/(l**2))
     @staticmethod
     def create_Gramian(X1,X2,kernel,*args): 
         Sigma = kernel(X1,X2, *args)
@@ -293,7 +299,7 @@ class GPModel:
             return log_evidence
         except:
             print('Theta = ' +str(theta) + ' gave a non-PSD covariance matrix.')
-            return -1e-3
+            return -1e+3
         
         
     ''' --- Optimizations --- '''
@@ -335,9 +341,9 @@ class GPModel:
                    {'name': 'sigma_l', 'type': 'continuous', 'domain': (1e-3,2e-3)}] # since f is a utility function this parameter make no much sense. 
         BO = BayesianOptimization(lambda theta: -self.evidence(theta[0],self.f_MAP), #theta[0] since need to unnest list one level
                                   domain=bounds,
-                                  optimize_restarts = 1,
+                                  optimize_restarts=0,
                                   normalize_Y=True)
-        BO.run_optimization(max_iter = 30)
+        BO.run_optimization(max_iter = 50)
         if self.verbose: print('Optimization of hyper-parameters took ' + str(time.time()-start) + ' seconds.')
         self.theta = BO.x_opt
         if self.verbose: print("The resulting theta is "+ str(self.theta))
