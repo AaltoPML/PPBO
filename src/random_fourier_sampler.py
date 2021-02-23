@@ -1,30 +1,26 @@
-
-
 import numpy as np
 import scipy
 import scipy.stats
 
 from scipy.special import ndtr as std_normal_cdf #scipy.special.ndtr fast numerical integration for standard normal cdf
-from scipy.integrate import quad as integrate  #numerical integration
-from GPyOpt.methods import BayesianOptimization #Use as global optimizer e.g. fro evidence maximization
 
-from itertools import chain #To unlist lists of lists
 import time
 
-from misc import inverse, is_positive_definite, pd_inverse, std_normal_pdf, var2_normal_pdf, pseudo_det, det, regularize_covariance
+from misc import pd_inverse, var2_normal_pdf
 
 
 class Hsampler:
     
-    def __init__(self, gp_model):
+    def __init__(self, gp_model,nFeatures=1000):
         
-        self.nFeatures = 1000 #Number of random Fourier features
+        self.nFeatures = nFeatures #Number of random Fourier features
         self.b = None
         self.W = None
         
         self.D = gp_model.D
         self.m = gp_model.m
         self.X = gp_model.X
+        self.GP_xstar = gp_model.xstar
         self.n_gausshermite_sample_points = gp_model.n_gausshermite_sample_points
         self.obs_indices = gp_model.obs_indices
         self.kernel = str(gp_model.kernel.__name__)
@@ -129,7 +125,7 @@ class Hsampler:
         start = time.time()
         res = scipy.optimize.minimize(lambda omega: -self.S(omega,self.theta), omega_initial, method='trust-exact',
                        jac=lambda omega: -self.S_grad(omega,self.theta), hess=lambda omega: -self.S_hessian(omega,self.theta),
-                       options={'disp': self.verbose,'maxiter': 5000})
+                       options={'disp': self.verbose})
         if self.verbose: print('... this took ' + str(time.time()-start) + ' seconds.')
         self.omega_MAP = res.x
         
@@ -144,8 +140,8 @@ class Hsampler:
         
     def return_xstar(self,omega):
         start = time.time()
-        min_trials = 15
-        max_trials = 100
+        min_trials = 5
+        max_trials = 30
         fval = -1e+10
         xstar = None
         i=0
@@ -154,10 +150,12 @@ class Hsampler:
                 print('Bad omega sample: unable to find f_approx maximizer')
                 break
             i+=1
-            x_initial = np.random.uniform(0,1,size=self.D)
-            res = scipy.optimize.minimize(lambda x: -np.dot(self.phi(x).T,omega), x_initial, method='BFGS',
+            #x_initial = np.random.uniform(0,1,size=self.D)
+            #Best initial guess is the maximizer of the posterior mean
+            x_initial = np.clip(self.GP_xstar + 0.01*np.random.uniform(0,1,size=self.D),0,1)
+            res = scipy.optimize.minimize(lambda x: -np.dot(self.phi(x).T,omega), x0=x_initial, method='L-BFGS-B',bounds=((0,1),)*self.D,
                                           jac=lambda x: -np.dot(self.Dphi(x).T,omega), #hess=lambda x: -np.dot(self.DDphi(x).T,omega),
-                                          options={'disp': False,'maxiter': 5000})
+                                          options={'disp': False,'maxiter': 5000}) #'maxiter': 5000
             xcandidate = res.x
             fval_ = np.dot(self.phi(xcandidate).T,omega)
             if fval_ > fval and all([xcandidate[d]>=0 and xcandidate[d]<=1 for d in range(self.D)]): #Check is there improvement and candidate within boundaries
@@ -176,5 +174,3 @@ class Hsampler:
             omega = self.sample_omega()
             xstar = self.return_xstar(omega)     
         return xstar
-        
-
