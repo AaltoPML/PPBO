@@ -1,5 +1,5 @@
 from feedback_processing import FeedbackProcessing
-#from kernels import SE_kernel, RQ_kernel, camphor_copper_kernel
+from kernels import SE_kernel, RQ_kernel, camphor_copper_kernel
 from misc import inverse, is_positive_definite, pd_inverse, std_normal_pdf, var2_normal_pdf, pseudo_det, det, regularize_covariance
 
 from itertools import chain #To unlist lists of lists
