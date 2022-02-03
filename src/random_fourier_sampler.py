@@ -21,6 +21,7 @@ class Hsampler:
         self.m = gp_model.m
         self.X = gp_model.X
         self.GP_xstar = gp_model.xstar
+        self.GP_xstars_local = gp_model.xstars_local
         self.n_gausshermite_sample_points = gp_model.n_gausshermite_sample_points
         self.obs_indices = gp_model.obs_indices
         self.kernel = str(gp_model.kernel.__name__)
@@ -122,6 +123,7 @@ class Hsampler:
     
     def update_omega_MAP(self):
         omega_initial = np.random.randn(self.nFeatures)
+        #omega_initial = np.random.normal(0,1,size=self.nFeatures)
         start = time.time()
         res = scipy.optimize.minimize(lambda omega: -self.S(omega,self.theta), omega_initial, method='trust-exact',
                        jac=lambda omega: -self.S_grad(omega,self.theta), hess=lambda omega: -self.S_hessian(omega,self.theta),
@@ -150,9 +152,17 @@ class Hsampler:
                 print('Bad omega sample: unable to find f_approx maximizer')
                 break
             i+=1
+            
+            ''' Option 1 '''
             #x_initial = np.random.uniform(0,1,size=self.D)
-            #Best initial guess is the maximizer of the posterior mean
-            x_initial = np.clip(self.GP_xstar + 0.01*np.random.uniform(0,1,size=self.D),0,1)
+            ''' Option 2 '''
+            #Best initial guess is the maximizer of the posterior mean (plus perturbation)
+            #x_initial = np.clip(self.GP_xstar + 0.01*np.random.uniform(0,1,size=self.D),0,1)
+            ''' Option 3 '''
+            #Pick random local maxima (plus perturbation) as initial value
+            x_initial = self.GP_xstars_local[np.random.randint(self.GP_xstars_local.shape[0])]
+            x_initial = np.clip(x_initial + 0.01*np.random.uniform(0,1,size=self.D),0,1)
+            
             res = scipy.optimize.minimize(lambda x: -np.dot(self.phi(x).T,omega), x0=x_initial, method='L-BFGS-B',bounds=((0,1),)*self.D,
                                           jac=lambda x: -np.dot(self.Dphi(x).T,omega), #hess=lambda x: -np.dot(self.DDphi(x).T,omega),
                                           options={'disp': False,'maxiter': 5000}) #'maxiter': 5000
@@ -165,12 +175,53 @@ class Hsampler:
         if self.verbose: print('Optimization of f_approx took ' + str(time.time()-start) + ' seconds.')
         return xstar
     
+    
+    ''' Additional functionality: Function for sampling best value for dim given values of other dims (ref_vec) '''
+    def return_xstar_for_dim(self,omega,dim,x_ref):
+        start = time.time()
+        min_trials = 5
+        max_trials = 30
+        fval = -1e+10
+        xstar = None
+        i=0
+        def x(x_dim):
+            x_ref[dim-1]=x_dim[0]
+            return x_ref
+        while xstar is None or i<min_trials:
+            if i > max_trials:
+                print('Bad omega sample: unable to find f_approx maximizer')
+                break
+            i+=1
+            x_initial = np.array(self.GP_xstar[dim-1])
+            res = scipy.optimize.minimize(lambda x_dim: -np.dot(self.phi(x(x_dim)).T,omega), x0=x_initial, method='Nelder-Mead',bounds=((0,1),),
+                                          options={'disp': False,'maxiter': 5000}) 
+            xcandidate = x(res.x)
+            fval_ = np.dot(self.phi(xcandidate).T,omega)
+            if fval_ > fval and all([xcandidate[d]>=0 and xcandidate[d]<=1 for d in range(self.D)]): #Check is there improvement and candidate within boundaries
+                fval = fval_
+                xstar = xcandidate 
+        if self.verbose: print('Optimization of f_approx took ' + str(time.time()-start) + ' seconds.')
+        return xstar
+    
+    
     def sample_omega(self):
-        return np.random.multivariate_normal(self.omega_MAP,self.covariance)
+        try:
+            omega = np.random.multivariate_normal(self.omega_MAP,self.covariance)
+        except:
+            omega = self.omega_MAP
+            print("Omega sampler error! Omega MAP-estimate was used instead.")
+        return omega
     
     def sample_xstar(self):
         xstar = None
         while xstar is None:
             omega = self.sample_omega()
             xstar = self.return_xstar(omega)     
+        return xstar
+    
+    def sample_xstar_for_dim(self,dim,x_ref):
+        xstar = None
+        while xstar is None:
+            omega = self.sample_omega()
+            xstar = self.return_xstar_for_dim(omega,dim,x_ref)     
         return xstar

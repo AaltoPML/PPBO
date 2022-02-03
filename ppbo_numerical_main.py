@@ -23,6 +23,7 @@ from datetime import datetime
 from ppbo_settings import PPBO_settings
 from gp_model import GPModel
 from acquisition import next_query
+from misc import hypercube_corners
 from test_functions import pp_ackley, pp_hartmann6d, pp_levy, pp_sixhump_camel, hartmann6d_orig, ackley_orig, levy_orig, sixhump_camel_orig
 
 from pypet import Environment
@@ -74,6 +75,9 @@ def run_ppbo_loop(objective,initial_queries_xi,initial_queries_x,number_of_actua
         #Set query location
         if not i==0 and ADAPTIVE_INITIALIZATION: 
             initial_queries_x[i:,:] = alpha_star*xi + x
+        
+        if i==len(initial_queries_xi)-1:
+            GP_model.turn_initialization_off()
         
         x = np.array(initial_queries_x[i])
         xi = np.array(initial_queries_xi[i])
@@ -138,10 +142,13 @@ def run_ppbo_loop(objective,initial_queries_xi,initial_queries_x,number_of_actua
 def six_hump_camel(traj):
     PPBO_settings_ = PPBO_settings(D=2,bounds=((-3,3),(-2,2)),
                                    xi_acquisition_function=traj.xi_acquisition_function,m=traj.m,
-                                   theta_initial=[0.001,0.2,0.1],alpha_grid_distribution='TGN') #[0.092,0.124,0.356]
-    initial_queries_xi = np.diag([PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)])
+                                   theta_initial=[1,0.1,8],alpha_grid_distribution='equispaced') #'equispaced'
     np.random.seed(traj.initialization_seed) 
-    initial_queries_x = np.random.uniform([PPBO_settings_.original_bounds[i][0] for i in range(PPBO_settings_.D)], [PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)], (len(initial_queries_xi), PPBO_settings_.D))
+    initial_queries_xi = np.diag([PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)])
+    #initial_queries_x = np.random.uniform([PPBO_settings_.original_bounds[i][0] for i in range(PPBO_settings_.D)], [PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)], (len(initial_queries_xi), PPBO_settings_.D))
+    ''' Initial values = all cornes of the domain X '''
+    initial_queries_xi = np.tile(initial_queries_xi,(2,1))
+    initial_queries_x = hypercube_corners(PPBO_settings_.original_bounds)[0:len(initial_queries_xi)]
     results,xstar_results,mustar_results,GP_model = run_ppbo_loop('six_hump_camel',initial_queries_xi,initial_queries_x,traj.number_of_actual_queries,PPBO_settings_)
     traj.f_add_result('xstar',xstar_results)
     traj.f_add_result('mustar',mustar_results)
@@ -152,7 +159,7 @@ def levy(traj):
     D = 10
     PPBO_settings_ = PPBO_settings(D=D,bounds=((-10,10),)*D,
                                    xi_acquisition_function=traj.xi_acquisition_function,m=traj.m,
-                                   theta_initial=[0.001,0.4,0.15],alpha_grid_distribution='TGN') #[0.09,0.3,0.5]
+                                   theta_initial=[1,0.1,8],alpha_grid_distribution='TGN') #[0.001,0.4,0.15]
     initial_queries_xi = np.diag([PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)])
     np.random.seed(traj.initialization_seed) 
     initial_queries_x = np.random.uniform([PPBO_settings_.original_bounds[i][0] for i in range(PPBO_settings_.D)], [PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)], (len(initial_queries_xi), PPBO_settings_.D))
@@ -165,7 +172,7 @@ def ackley(traj):
     D = 20
     PPBO_settings_ = PPBO_settings(D=D,bounds=((-32.768, 32.768),)*D,
                                       xi_acquisition_function=traj.xi_acquisition_function,m=traj.m,
-                                      theta_initial=[0.001,0.45,0.15],alpha_grid_distribution='TGN') #[0.09,0.3,0.5]
+                                      theta_initial=[1,0.1,8],alpha_grid_distribution='TGN') #[0.09,0.3,0.5]
     initial_queries_xi = np.diag([PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)])
     np.random.seed(traj.initialization_seed) 
     initial_queries_x = np.random.uniform([PPBO_settings_.original_bounds[i][0] for i in range(PPBO_settings_.D)], [PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)], (len(initial_queries_xi), PPBO_settings_.D))
@@ -177,7 +184,7 @@ def ackley(traj):
 def hartmann6d(traj):
     PPBO_settings_ = PPBO_settings(D=6,bounds=((0, 1),)*6,
                                    xi_acquisition_function=traj.xi_acquisition_function,m=traj.m,
-                                   theta_initial=[0.001,0.26,0.1],alpha_grid_distribution='TGN') #[0.09,0.3,0.5]
+                                   theta_initial=[1,0.1,8],alpha_grid_distribution='TGN') #[0.001,0.26,0.1]
     initial_queries_xi = np.eye(PPBO_settings_.D)
     np.random.seed(traj.initialization_seed) 
     initial_queries_x = np.random.uniform([PPBO_settings_.original_bounds[i][0] for i in range(PPBO_settings_.D)], [PPBO_settings_.original_bounds[i][1] for i in range(PPBO_settings_.D)], (len(initial_queries_xi), PPBO_settings_.D))
@@ -187,11 +194,11 @@ def hartmann6d(traj):
     return GP_model
 
 ''' Run experimetns '''
-NUMBER_OF_QUERIES = 15
+NUMBER_OF_QUERIES = 35 #35
 ADAPTIVE_INITIALIZATION = False #Set previous feedback for d, for value of d-th-coordinate of intial query
 OPTIMIZE_HYPERPARAMETERS_AFTER_INITIALIZATION = False
 OPTIMIZE_HYPERPARAMETERS_AFTER_EACH_ITERATION = False
-OPTIMIZE_HYPERPARAMETERS_AFTER_ACTUAL_QUERY_NUMBER = 999
+OPTIMIZE_HYPERPARAMETERS_AFTER_ACTUAL_QUERY_NUMBER = 15
 
 env = Environment(trajectory='numerical_experiments_trajectory_'+str(datetime.now().strftime("%d-%m-%Y_%H-%M-%S")),overwrite_file=True,
                   multiproc=True,ncores=0,use_pool=False,wrap_mode='LOCAL')
@@ -216,7 +223,7 @@ if should_log:
 ''' Experiment settings: set acquisition strategies, etc. '''  
 seeds = list(range(1))
 run_settings = {'initialization_seed':seeds, 
-                                  'xi_acquisition_function':['PCD']*len(seeds)}
+                                  'xi_acquisition_function':['RAND']*len(seeds)}
 #run_settings = {'initialization_seed':seeds*10, 
 #                                  'xi_acquisition_function':['PCD','EXT','RAND','EI','EXR']*len(seeds)}
 #run_settings = {'initialization_seed':seeds*7, 
@@ -228,7 +235,7 @@ traj.f_explore(run_settings)
 start = time.time()
 #env.run(six_hump_camel)
 #env.run(levy)
-env.run(hartmann6d)
+#env.run(hartmann6d)
 #env.run(ackley)
 
 
@@ -255,71 +262,71 @@ if should_log:
 
 
 
-### This is for debugging ###
-#GP_model = env.run(six_hump_camel)
-#GP_model = GP_model[0][1]
-#GP_model.update_model(optimize_theta=True)
-#X = GP_model.X
-#Lambda = GP_model.Lambda_MAP
-#mu_pred,Sigma_pred = GP_model.mu_Sigma_pred(X)
-#Sigma = pd.DataFrame(GP_model.Sigma)
-#Sigma_inv = GP_model.Sigma_inv
-#posterior_covariance = GP_model.posterior_covariance
-#posterior_covariance_inv = GP_model.posterior_covariance_inv
-#print(GP_model.FP.unscale(GP_model.xstar))
-#
-#from random_fourier_sampler import Hsampler
-#h_sampler = Hsampler(GP_model)
-#h_sampler.generate_basis()
-#h_sampler.update_phi_X()
-#h_sampler.update_omega_MAP()
-#h_sampler.update_covariancematrix()
-#cov_inv=pd.DataFrame(h_sampler.covariance_inv)
-#cov=pd.DataFrame(h_sampler.covariance)
-#xstar = h_sampler.return_xstar(h_sampler.omega_MAP)
-#print(xstar)
-#print(GP_model.FP.unscale(xstar))
-#
-#histogram=[]
-#for i in range(50):
-#    histogram.append(GP_model.FP.unscale(h_sampler.sample_xstar()))
-#histogram = np.array(histogram)
-#import matplotlib
-#import matplotlib.pyplot as plt
-#plt.plot(histogram[:,0],histogram[:,1],'ro',alpha=0.1)
-#plt.scatter(0.0898,-0.7126, s=50,alpha=1,marker="*",color="black")
-#plt.scatter(-0.0898,0.7126, s=50,alpha=1,marker="*",color="black")
-############################# CONTOUR PLOTS ##########################
-#import scipy
-#import scipy.stats
-#x = histogram[:, 0]
-#y = histogram[:, 1]
-#xmin = GP_model.original_bounds[0][0]
-#xmax = GP_model.original_bounds[0][1]
-#ymin = GP_model.original_bounds[1][0]
-#ymax = GP_model.original_bounds[1][1]
-## Create meshgrid
-#xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-#positions = np.vstack([xx.ravel(), yy.ravel()])
-#values = np.vstack([x, y])
-#kernel = scipy.stats.gaussian_kde(values)
-#f = np.reshape(kernel(positions).T, xx.shape)
-#fig = plt.figure(figsize=(8,8))
-#ax = fig.gca()
-#ax.set_xlim(xmin, xmax)
-#ax.set_ylim(ymin, ymax)
-#cfset = ax.contourf(xx, yy, f, cmap='coolwarm')
-#ax.imshow(np.rot90(f), cmap='coolwarm', extent=[xmin, xmax, ymin, ymax])
-#cset = ax.contour(xx, yy, f, colors='k')
-#ax.clabel(cset, inline=1, fontsize=10)
-#ax.scatter(0.0898,-0.7126, s=50,alpha=1,marker="*",color="black")
-#ax.scatter(-0.0898,0.7126, s=50,alpha=1,marker="*",color="black")
-#ax.set_xlabel("Variable $x_1$")
-#ax.set_ylabel("Variable $x_2$")
-#plt.title('2D Gaussian Kernel density estimation')
-##emprirical mean of the estimated distribution
-#print('Mean: ' + str(np.mean(kernel.resample(100000),axis=1)))
-##################################################################################
+## This is for debugging ###
+GP_model = env.run(six_hump_camel)
+GP_model = GP_model[0][1]
+#GP_model.theta = [1,0.09144542,10] #This is good
+#GP_model.update_model(optimize_theta=False)
+X = GP_model.X
+Lambda = GP_model.Lambda_MAP
+mu_pred,Sigma_pred = GP_model.mu_Sigma_pred(X)
+Sigma = pd.DataFrame(GP_model.Sigma)
+Sigma_inv = GP_model.Sigma_inv
+posterior_covariance = GP_model.posterior_covariance
+posterior_covariance_inv = GP_model.posterior_covariance_inv
+print(GP_model.FP.unscale(GP_model.xstar))
+
+from random_fourier_sampler import Hsampler
+h_sampler = Hsampler(GP_model)
+h_sampler.generate_basis()
+h_sampler.update_phi_X()
+h_sampler.update_omega_MAP()
+h_sampler.update_covariancematrix()
+cov_inv=pd.DataFrame(h_sampler.covariance_inv)
+cov=pd.DataFrame(h_sampler.covariance)
+xstar = h_sampler.return_xstar(h_sampler.omega_MAP)
+print(GP_model.FP.unscale(xstar))
+
+histogram=[]
+for i in range(200):
+    histogram.append(GP_model.FP.unscale(h_sampler.sample_xstar()))
+histogram = np.array(histogram)
+import matplotlib
+import matplotlib.pyplot as plt
+plt.plot(histogram[:,0],histogram[:,1],'ro',alpha=0.1)
+plt.scatter(0.0898,-0.7126, s=50,alpha=1,marker="*",color="black")
+plt.scatter(-0.0898,0.7126, s=50,alpha=1,marker="*",color="black")
+############################ CONTOUR PLOTS ##########################
+import scipy
+import scipy.stats
+x = histogram[:, 0]
+y = histogram[:, 1]
+xmin = GP_model.original_bounds[0][0]
+xmax = GP_model.original_bounds[0][1]
+ymin = GP_model.original_bounds[1][0]
+ymax = GP_model.original_bounds[1][1]
+# Create meshgrid
+xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+positions = np.vstack([xx.ravel(), yy.ravel()])
+values = np.vstack([x, y])
+kernel = scipy.stats.gaussian_kde(values)
+f = np.reshape(kernel(positions).T, xx.shape)
+fig = plt.figure(figsize=(8,8))
+ax = fig.gca()
+ax.set_xlim(xmin, xmax)
+ax.set_ylim(ymin, ymax)
+cfset = ax.contourf(xx, yy, f, cmap='coolwarm')
+ax.imshow(np.rot90(f), cmap='coolwarm', extent=[xmin, xmax, ymin, ymax])
+cset = ax.contour(xx, yy, f, colors='k')
+ax.clabel(cset, inline=1, fontsize=10)
+ax.scatter(0.0898,-0.7126, s=50,alpha=1,marker="*",color="black")
+ax.scatter(-0.0898,0.7126, s=50,alpha=1,marker="*",color="black")
+ax.set_xlabel("Variable $x_1$")
+ax.set_ylabel("Variable $x_2$")
+plt.title('2D Gaussian Kernel density estimation')
+#emprirical mean of the estimated distribution
+print('Mean: ' + str(np.mean(kernel.resample(100000),axis=1)))
+#################################################################################
 
 
 

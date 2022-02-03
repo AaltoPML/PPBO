@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 import sklearn #covariance.shrunk_covariance
 import sklearn.covariance
+import itertools
 
 
 #''' Scaling '''
@@ -22,6 +23,7 @@ import sklearn.covariance
 
 
 ''' Find bounds for alpha '''
+
 def alpha_bounds(xi,lower,upper):
     xi = np.array(xi)
     lower = np.array(lower)
@@ -134,3 +136,13 @@ def var2_normal_pdf(x):
 
 #def var2_normal_pdf_der(x):
 #    return (-x/(4*np.sqrt(np.pi)))*np.exp(-0.25*np.power(x,2))
+
+
+''' Auxiliary function for creating x_initials vector from the domain corner points '''
+
+def hypercube_corners(bounds):
+    l_bounds = [x[0] for x in bounds]
+    u_bounds = [x[1] for x in bounds]
+    corners = list(itertools.product(*zip(l_bounds,u_bounds)))
+    return np.array(corners)
+

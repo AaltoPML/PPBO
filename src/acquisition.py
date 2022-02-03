@@ -35,6 +35,9 @@ def next_query(PPBO_settings,GP_model,unscale=True):
     elif PPBO_settings.xi_acquisition_function=='EI-VARMAX-FAST': 
         xi_next = EId_xstar(GP_model,PPBO_settings.mc_samples)
         x_next = next_x_given_xi(xi_next,GP_model,PPBO_settings)
+    elif PPBO_settings.xi_acquisition_function=='COORDINATE-VARMAX': #xi as in PCD, and x as in EI-VARMAX-FAST
+        xi_next = PCD_next_xi(PPBO_settings)
+        x_next = next_x_given_xi(xi_next,GP_model,PPBO_settings)     
     elif PPBO_settings.xi_acquisition_function=='EXR': #explore, i.e. varmax
         xi_next, x_next = maximize_varmax(xi_dims,GP_model,PPBO_settings)
     elif PPBO_settings.xi_acquisition_function=="RAND": #random
