@@ -1,18 +1,15 @@
 from feedback_processing import FeedbackProcessing
-
-import numpy as np
-import scipy
-import scipy.stats
-
-from scipy.special import ndtr as std_normal_cdf #scipy.special.ndtr fast numerical integration for standard normal cdf
-from scipy.integrate import quad as integrate  #numerical integration
-from GPyOpt.methods import BayesianOptimization #Use as global optimizer e.g. fro evidence maximization
+#from kernels import SE_kernel, RQ_kernel, camphor_copper_kernel
+from misc import inverse, is_positive_definite, pd_inverse, std_normal_pdf, var2_normal_pdf, pseudo_det, det, regularize_covariance
 
 from itertools import chain #To unlist lists of lists
 import time
-
-from kernels import SE_kernel, RQ_kernel, camphor_copper_kernel
-from misc import inverse, is_positive_definite, pd_inverse, std_normal_pdf, var2_normal_pdf, pseudo_det, det, regularize_covariance
+import numpy as np
+import scipy
+import scipy.stats
+from scipy.special import ndtr as std_normal_cdf #fast numerical integration for standard normal cdf
+from scipy.integrate import quad as integrate  #numerical integration
+from GPyOpt.methods import BayesianOptimization #Use as global optimizer for evidence maximization
 
 
 class GPModel:
@@ -20,7 +17,6 @@ class GPModel:
     Class for GP utility function model.
     Some methods are not inherited but composited from Feedback_Processing class
     """
-    
 
     def __init__(self, PPBO_settings):
         """
