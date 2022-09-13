@@ -94,7 +94,7 @@ class GPModel:
             self.FP.alpha_grid_distribution = 'equispaced' #Always use 'equispaced' pseudo-observations in initialization
             self.update_fMAP(random_initial_vector=False,fmap_finding_trials=1,approx_optimization=True)
         elif self.last_iteration:
-            self.update_fMAP(random_initial_vector=True,fmap_finding_trials=5)
+            self.update_fMAP(random_initial_vector=True,fmap_finding_trials=10)
         else:
             self.update_fMAP()
         if optimize_theta:
@@ -126,7 +126,7 @@ class GPModel:
         elif self.initialization_running and self.skip_xstaroptimization_during_initialization:
             pass
         elif self.last_iteration:
-            self.xstar, self.mustar, self.xstars_local = self.mu_star(mustar_finding_trials=5)    
+            self.xstar, self.mustar, self.xstars_local = self.mu_star(mustar_finding_trials=20)    
         else:
             self.xstar, self.mustar, self.xstars_local  = self.mu_star()
         if self.verbose: print("... this took " + str(time.time()-start) + " seconds.")
